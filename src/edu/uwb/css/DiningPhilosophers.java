@@ -21,7 +21,7 @@ public class DiningPhilosophers{
         for (int i = 0; i < nPhil; i++) {
             this.monitors[i] = new Object();
             this.state[i] = DiningState.THINKING;
-            Main.TPrint( "Philosopher is thinking:   i=" + i);
+
         }
     }
 
