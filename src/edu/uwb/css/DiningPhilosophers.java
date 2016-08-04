@@ -7,27 +7,26 @@ import java.util.concurrent.locks.Condition;
 public class DiningPhilosophers{
     public int nPhil;
     public DiningState[] state;
-    public Condition[] self;
-
+    public Object[] monitors;
 
     // This will let all the tests run (and fail)
     // You'll want to remove it once you actually create an array :)
     //int nPhil;
 
-
     public DiningPhilosophers(int nPhilosophers) {
-        nPhil =  nPhilosophers;
-        state = new DiningState[nPhil];
-        self = new Condition[nPhil];
+        this.nPhil =  nPhilosophers;
+        this.state = new DiningState[nPhil];
+        this.monitors = new Object[nPhil];
 
         for (int i = 0; i < nPhil; i++) {
-            state[i] = DiningState.THINKING;
+            this.monitors[i] = new Object();
+            this.state[i] = DiningState.THINKING;
             Main.TPrint( "Philosopher is thinking:   i=" + i);
         }
     }
 
     //this philosopher tries to take forks
-    public synchronized void takeForks(int i) {
+    public void takeForks(int i) {
         Main.TPrint( "TakeForks:   i=" + i);
         this.state[i] = DiningState.HUNGRY;     //change state to Hungry
         Main.TPrint( "Philosopher:   i=" + i +  " is hungry.");
@@ -37,8 +36,8 @@ public class DiningPhilosophers{
         if(this.state[i] != DiningState.EATING){    //if this philosoper is not eating, it has to wait
             try{
                 Main.TPrint( "Philosopher:   i=" + i + " is waiting");
-                synchronized(this.self[i]) {
-                    this.self[i].wait();
+                synchronized(this.monitors[i]) {
+                    this.monitors[i].wait();
                 }
             } catch (InterruptedException e){
                 e.printStackTrace();
@@ -47,13 +46,13 @@ public class DiningPhilosophers{
     }
 
     //this philosopher returns forks
-    public synchronized void returnForks(int i) {
+    public void returnForks(int i) {
         Main.TPrint( "returnForks:   i=" + i );
         this.state[i] = DiningState.THINKING;
         Main.TPrint( "Philosopher is thinking:   i=" + i);
 
         //check if left or right neighbours can eat now
-        test((i + nPhil) % nPhil);
+        test((i + nPhil - 1) % nPhil);
         test((i + 1) % nPhil);
     }
 
@@ -66,8 +65,8 @@ public class DiningPhilosophers{
            this.state[i] = DiningState.EATING;                                  //change this philosopher's state to Eating
            Main.TPrint( "Philosopher:   i=" + i +  " is eating.");
 
-           synchronized (this.self[i]){
-               this.self[i].notifyAll();                                        //wake up all other threads
+           synchronized (this.monitors[i]){
+               this.monitors[i].notify();                                        //wake up all other threads
            }
        }
     }
